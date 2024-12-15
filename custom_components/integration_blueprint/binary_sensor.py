@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .entity import LeakDefenseEntity
 from .coordinator import BlueprintDataUpdateCoordinator
 from .models import Panel
 
@@ -41,24 +40,24 @@ class WaterValveEntity(
         """Initialize the water valve entity."""
         super().__init__(coordinator)
         self.panel: Panel = panel
-        self._attr_name: str = f"{panel.textIdentifier} Water Valve"
+        self._attr_name: str = f"{panel.text_identifier} Water Valve"
         self._attr_unique_id: str = f"leak_defense_{panel.id}"
 
     @property
     def is_on(self) -> bool:
         """Return the state of the water valve (water is on)."""
-        return self.panel.waterOn
+        return self.panel.water_on
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional attributes for the water valve."""
         return {
             "offline": self.panel.offline,
-            "too_cold": self.panel.tooCold,
+            "too_cold": self.panel.too_cold,
             "scene": self.panel.scene,
-            "flow_value": self.panel.flowValue,
-            "trip_value": self.panel.tripValue,
-            "in_alarm": self.panel.inAlarm,
+            "flow_value": self.panel.flow_value,
+            "trip_value": self.panel.trip_value,
+            "in_alarm": self.panel.in_alarm,
         }
 
 
@@ -71,13 +70,13 @@ class PanelTooColdEntity(
         """Initialize the too cold binary sensor."""
         super().__init__(coordinator)
         self.panel = panel
-        self._attr_name = f"{panel.textIdentifier} Too Cold"
+        self._attr_name = f"{panel.text_identifier} Too Cold"
         self._attr_unique_id = f"leak_defense_{panel.id}_too_cold"
 
     @property
     def is_on(self) -> bool:
         """Return True if the panel is too cold."""
-        return self.panel.tooCold
+        return self.panel.too_cold
 
 
 class PanelOfflineEntity(
@@ -89,7 +88,7 @@ class PanelOfflineEntity(
         """Initialize the offline binary sensor."""
         super().__init__(coordinator)
         self.panel = panel
-        self._attr_name = f"{panel.textIdentifier} Offline"
+        self._attr_name = f"{panel.text_identifier} Offline"
         self._attr_unique_id = f"leak_defense_{panel.id}_offline"
 
     @property
@@ -107,13 +106,13 @@ class PanelInAlarmEntity(
         """Initialize the in alarm binary sensor."""
         super().__init__(coordinator)
         self.panel = panel
-        self._attr_name = f"{panel.textIdentifier} In Alarm"
+        self._attr_name = f"{panel.text_identifier} In Alarm"
         self._attr_unique_id = f"leak_defense_{panel.id}_in_alarm"
 
     @property
     def is_on(self) -> bool:
         """Return True if the panel is in alarm."""
-        return self.panel.inAlarm
+        return self.panel.in_alarm
 
 
 async def async_setup_entry(

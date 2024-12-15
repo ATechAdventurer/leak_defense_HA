@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import BlueprintDataUpdateCoordinator
@@ -76,7 +75,7 @@ class PanelSceneSensor(CoordinatorEntity[BlueprintDataUpdateCoordinator], Sensor
         """Initialize the scene sensor."""
         super().__init__(coordinator)
         self.panel = panel
-        self._attr_name = f"{panel.textIdentifier} Scene"
+        self._attr_name = f"{panel.text_identifier} Scene"
         self._attr_unique_id = f"leak_defense_{panel.id}_scene"
 
     @property
@@ -94,14 +93,14 @@ class PanelFlowValueSensor(
         """Initialize the flow value sensor."""
         super().__init__(coordinator)
         self.panel = panel
-        self._attr_name = f"{panel.textIdentifier} Flow Value"
+        self._attr_name = f"{panel.text_identifier} Flow Value"
         self._attr_unique_id = f"leak_defense_{panel.id}_flow_value"
         self._attr_native_unit_of_measurement = "L/min"
 
     @property
     def native_value(self) -> float:
         """Return the flow value."""
-        return self.panel.flowValue
+        return self.panel.flow_value
 
 
 class PanelTripValueSensor(
@@ -113,11 +112,11 @@ class PanelTripValueSensor(
         """Initialize the trip value sensor."""
         super().__init__(coordinator)
         self.panel = panel
-        self._attr_name = f"{panel.textIdentifier} Trip Value"
+        self._attr_name = f"{panel.text_identifier} Trip Value"
         self._attr_unique_id = f"leak_defense_{panel.id}_trip_value"
         self._attr_native_unit_of_measurement = "L/min"
 
     @property
     def native_value(self) -> float:
         """Return the trip value."""
-        return self.panel.tripValue
+        return self.panel.trip_value

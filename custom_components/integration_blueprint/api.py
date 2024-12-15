@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import socket
 import uuid
 from typing import Any
@@ -10,8 +11,6 @@ import aiohttp
 import async_timeout
 
 from .models import Customer, TokenResponse
-
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 

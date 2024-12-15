@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 
     from .data import LeakDefenseConfigEntry
 
-from homeassistant.const import Platform
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 

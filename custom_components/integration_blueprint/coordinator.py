@@ -8,8 +8,6 @@ from typing import TYPE_CHECKING, TypedDict
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from custom_components.integration_blueprint.models import Customer
-
 from .api import (
     LeakDefenseApiClientAuthenticationError,
     LeakDefenseApiClientError,
