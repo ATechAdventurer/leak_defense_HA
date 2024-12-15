@@ -1,0 +1,21 @@
+set_scene:
+  name: Set Scene
+  description: Sets the scene for a specified Leak Defense panel.
+  fields:
+    device_id:
+      name: Device
+      description: The device ID of the Leak Defense panel.
+      required: true
+      selector:
+        device:
+          integration: leak_defense
+    scene:
+      name: Scene
+      description: The scene to set for the panel.
+      required: true
+      selector:
+        select:
+          options:
+            - "HOME"
+            - "AWAY"
+            - "STANDBY"

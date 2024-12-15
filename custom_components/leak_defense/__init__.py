@@ -7,11 +7,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import SelectSelectorMode
 from homeassistant.loader import async_get_loaded_integration
 
 from custom_components.leak_defense.models import SceneEnum
@@ -22,6 +23,7 @@ from .coordinator import BlueprintDataUpdateCoordinator
 from .data import LeakDefenseData
 
 if TYPE_CHECKING:
+    from homeassistant.core import ServiceCall
     from homeassistant.core import HomeAssistant
 
     from .data import LeakDefenseConfigEntry
@@ -54,54 +56,46 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register the service
-    async def async_set_panel_state(call) -> None:
-        """Handle the service call to set the panel state."""
-        device_id = call.data.get("device_id")
-        state = call.data.get("state")
+    async def async_set_scene(call: ServiceCall) -> None:
+        """Handle setting scene."""
+        device_id = call.data["device_id"]
+        scene = call.data["scene"]
 
-        # Map the device_id to panel_id
-        dev_reg = dr.async_get(hass)
-        device = dev_reg.async_get(device_id)
+        device_registry = dr.async_get(hass)
+        device = device_registry.async_get(device_id)
+
         if not device:
-            msg = f"Device {device_id} not found"
-            raise ValueError(msg)
+            raise ValueError(f"Device {device_id} not found")
 
+        # Get the panel_id from the device identifier
         panel_id = next(
             (id_ for domain, id_ in device.identifiers if domain == DOMAIN),
             None,
         )
-        if not panel_id:
-            msg = f"No panel ID found for device {device_id}"
-            raise ValueError(msg)
 
-        try:
-            await entry.runtime_data.client.async_send_scene(
-                scene=state,
-                panel_id=int(panel_id),
-            )
-            await coordinator.async_request_refresh()
-        except Exception as err:
-            LOGGER.exception(f"Failed to set panel state: {err}")
-            raise
+        if not panel_id:
+            raise ValueError(f"No panel ID found for device {device_id}")
+
+        # Send the scene command
+        await entry.runtime_data.client.async_send_scene(
+            scene=scene,
+            panel_id=int(panel_id),
+        )
+        await entry.runtime_data.coordinator.async_request_refresh()
+
+    # Register the service with schema validation
+    service_schema = vol.Schema(
+        {
+            vol.Required("device_id"): str,
+            vol.Required("scene"): vol.In([scene.value for scene in SceneEnum]),
+        }
+    )
 
     hass.services.async_register(
-        domain=DOMAIN,
-        service="set_panel_state",
-        schema=vol.Schema(
-            {
-                vol.Required("device_id"): selector.DeviceSelector(
-                    selector.DeviceSelectorConfig(integration=DOMAIN)
-                ),
-                vol.Required("state"): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[SceneEnum.HOME, SceneEnum.AWAY, SceneEnum.STANDBY],
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-            }
-        ),
-        service_func=async_set_panel_state,
+        DOMAIN,
+        "set_scene",
+        async_set_scene,
+        schema=service_schema,
     )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

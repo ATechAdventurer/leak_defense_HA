@@ -112,8 +112,6 @@ class LeakDefenseApiClient:
             msg = "Token and device ID must be provided."
             raise LeakDefenseApiClientAuthenticationError(msg)
 
-        _LOGGER.info("Fetching data from the API.")
-
         response = await self._api_wrapper(
             method="get",
             endpoint="/Customer/GetV3",
@@ -145,6 +143,20 @@ class LeakDefenseApiClient:
             msg = f"Panel with ID {panel_id} not found."
             raise LeakDefenseApiClientError(msg)
 
+        scene_payload = CommandSetScene(
+            ApiSource=2,
+            ReturnPanelVM=True,
+            LegacyRequest=LegacyRequest(
+                id=panel_id,
+                mode=scene,
+                tripTime=str(int(current_panel.countdown_timer)),
+                tripVal=str(int(current_panel.trip_value)),
+                waterOff=not current_panel.water_on,
+                clearAlarm=False,
+            ),
+            HexRequest=HexRequest(Scene=None, value=None),
+        )
+        _LOGGER.log(msg=scene_payload.model_dump_json(), level=logging.INFO)
         await self._api_wrapper(
             method="post",
             endpoint="/Command/SetScene",
@@ -152,19 +164,7 @@ class LeakDefenseApiClient:
                 "deviceid": self._device_hash,
                 "token": self._token,
             },
-            data=CommandSetScene(
-                ApiSource=2,
-                ReturnPanelVM=True,
-                LegacyRequest=LegacyRequest(
-                    id=panel_id,
-                    mode=scene,
-                    tripTime=str(current_panel.time_to_alarm),
-                    tripVal=str(current_panel.trip_value),
-                    waterOff=not current_panel.water_on,
-                    clearAlarm=False,
-                ),
-                HexRequest=HexRequest(Scene=None, value=None),
-            ).model_dump(),
+            data=scene_payload.model_dump(),
         )
 
     def _make_headers(self, additional_headers: dict) -> dict:
