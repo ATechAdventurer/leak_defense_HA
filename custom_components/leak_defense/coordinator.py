@@ -17,13 +17,13 @@ from .const import DOMAIN, LOGGER
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-    from custom_components.integration_blueprint.models import Panel
+    from custom_components.leak_defense.models import Panel
 
     from .data import LeakDefenseConfigEntry
 
 
 class CoordinatorData(TypedDict):
-    panels: list[Panel]
+    panels: dict[int, Panel]
 
 
 # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
@@ -41,7 +41,7 @@ class BlueprintDataUpdateCoordinator(DataUpdateCoordinator[CoordinatorData]):
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(hours=1),
+            update_interval=timedelta(seconds=30),
         )
 
     async def _async_update_data(self) -> CoordinatorData:
@@ -53,6 +53,6 @@ class BlueprintDataUpdateCoordinator(DataUpdateCoordinator[CoordinatorData]):
         except LeakDefenseApiClientError as exception:
             raise UpdateFailed(exception) from exception
 
-        # Extract relevant panel data
-        panels = customer_data.panels  # List of Panel objects
-        return {"panels": panels}
+        # Transform list of panels to a dictionary with panel ID as key
+        panels_dict = {panel.id: panel for panel in customer_data.panels}
+        return {"panels": panels_dict}

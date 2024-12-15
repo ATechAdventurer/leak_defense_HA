@@ -40,7 +40,7 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 registration = await client.async_register_application()
                 data = {
                     "token": registration.token,
-                    "deviceHash": registration.deviceHash,
+                    "device_hash": registration.device_hash,
                 }
             except LeakDefenseApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)

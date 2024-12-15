@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import BaseModel, Field
 
 
@@ -135,3 +137,34 @@ class ApiResponse(BaseModel):
     ios_version: str = Field(alias="iOSVersion")
     android_version: str = Field(alias="androidVersion")
     in_maint: str = Field(alias="inMaint")
+
+
+from pydantic import BaseModel
+from typing import Optional
+
+
+class LegacyRequest(BaseModel):
+    id: int
+    mode: str
+    tripTime: str
+    tripVal: str
+    waterOff: bool
+    clearAlarm: bool
+
+
+class HexRequest(BaseModel):
+    Scene: Optional[str] = None
+    value: Optional[str] = None
+
+
+class CommandSetScene(BaseModel):
+    ApiSource: int
+    ReturnPanelVM: bool
+    LegacyRequest: LegacyRequest
+    HexRequest: HexRequest
+
+
+class SceneEnum(str, Enum):
+    HOME = "HOME"
+    AWAY = "AWAY"
+    STANDBY = "STANDBY"

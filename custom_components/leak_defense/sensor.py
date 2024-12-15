@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from custom_components.integration_blueprint.models import Panel
+    from custom_components.leak_defense.models import Panel
 
     from .data import LeakDefenseConfigEntry
 
@@ -39,10 +39,9 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     # Create entities for each panel
-    panels: list[Panel] = coordinator.data["panels"]
     entities: list[SensorEntity] = []
 
-    for panel in panels:
+    for panel in coordinator.data["panels"].values():
         entities.append(PanelSceneSensor(coordinator, panel))
         entities.append(PanelFlowValueSensor(coordinator, panel))
         entities.append(PanelTripValueSensor(coordinator, panel))
@@ -50,73 +49,62 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class LeakDefenseSensor(LeakDefenseEntity, SensorEntity):
-    """leak_defense Sensor class."""
-
-    def __init__(
-        self,
-        coordinator: BlueprintDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor class."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the native value of the sensor."""
-        return self.coordinator.data.get("body")
-
-
-class PanelSceneSensor(CoordinatorEntity[BlueprintDataUpdateCoordinator], SensorEntity):
+class PanelSceneSensor(LeakDefenseEntity, SensorEntity):
     """Sensor for the panel's scene."""
 
-    def __init__(self, coordinator: BlueprintDataUpdateCoordinator, panel: Panel):
+    def __init__(
+        self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
+    ):
         """Initialize the scene sensor."""
-        super().__init__(coordinator)
-        self.panel = panel
-        self._attr_name = f"{panel.text_identifier} Scene"
-        self._attr_unique_id = f"leak_defense_{panel.id}_scene"
+        super().__init__(coordinator, inital_panel)
+        self.panel = inital_panel
+        self._attr_name = f"{inital_panel.text_identifier} Scene"
+        self._attr_unique_id = f"leak_defense_{inital_panel.id}_scene"
 
     @property
     def native_value(self) -> str:
         """Return the scene value."""
-        return self.panel.scene
+
+        updated_panel = self.coordinator.data["panels"].get(self.panel.id)
+
+        return updated_panel.scene if updated_panel else "Unknown"
 
 
-class PanelFlowValueSensor(
-    CoordinatorEntity[BlueprintDataUpdateCoordinator], SensorEntity
-):
+class PanelFlowValueSensor(LeakDefenseEntity, SensorEntity):
     """Sensor for the panel's flow value."""
 
-    def __init__(self, coordinator: BlueprintDataUpdateCoordinator, panel: Panel):
+    def __init__(
+        self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
+    ):
         """Initialize the flow value sensor."""
-        super().__init__(coordinator)
-        self.panel = panel
-        self._attr_name = f"{panel.text_identifier} Flow Value"
-        self._attr_unique_id = f"leak_defense_{panel.id}_flow_value"
+        super().__init__(coordinator, panel=inital_panel)
+        self.panel = inital_panel
+        self._attr_name = f"{inital_panel.text_identifier} Flow Value"
+        self._attr_unique_id = f"leak_defense_{inital_panel.id}_flow_value"
         self._attr_native_unit_of_measurement = "L/min"
 
     @property
     def native_value(self) -> float:
         """Return the flow value."""
-        return self.panel.flow_value
+        updated_panel = self.coordinator.data["panels"].get(self.panel.id)
+        return updated_panel.flow_value if updated_panel else float("nan")
 
 
-class PanelTripValueSensor(
-    CoordinatorEntity[BlueprintDataUpdateCoordinator], SensorEntity
-):
+class PanelTripValueSensor(LeakDefenseEntity, SensorEntity):
     """Sensor for the panel's trip value."""
 
-    def __init__(self, coordinator: BlueprintDataUpdateCoordinator, panel: Panel):
+    def __init__(
+        self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
+    ):
         """Initialize the trip value sensor."""
-        super().__init__(coordinator)
-        self.panel = panel
-        self._attr_name = f"{panel.text_identifier} Trip Value"
-        self._attr_unique_id = f"leak_defense_{panel.id}_trip_value"
+        super().__init__(coordinator, panel=inital_panel)
+        self.panel = inital_panel
+        self._attr_name = f"{inital_panel.text_identifier} Trip Value"
+        self._attr_unique_id = f"leak_defense_{inital_panel.id}_trip_value"
         self._attr_native_unit_of_measurement = "L/min"
 
     @property
     def native_value(self) -> float:
         """Return the trip value."""
-        return self.panel.trip_value
+        updated_panel = self.coordinator.data["panels"].get(self.panel.id)
+        return updated_panel.trip_value if updated_panel else float("nan")
