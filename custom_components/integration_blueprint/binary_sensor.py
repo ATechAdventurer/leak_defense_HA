@@ -1,61 +1,140 @@
-"""Binary sensor platform for integration_blueprint."""
+"""Binary sensor platform for leak_defense."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .entity import IntegrationBlueprintEntity
+from .entity import LeakDefenseEntity
+from .coordinator import BlueprintDataUpdateCoordinator
+from .models import Panel
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import BlueprintDataUpdateCoordinator
-    from .data import IntegrationBlueprintConfigEntry
+    from .data import LeakDefenseConfigEntry
 
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
-        key="integration_blueprint",
-        name="Integration Blueprint Binary Sensor",
+        key="leak_defense",
+        name="Leak Defense Binary Sensor",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
-    entry: IntegrationBlueprintConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the binary_sensor platform."""
-    async_add_entities(
-        IntegrationBlueprintBinarySensor(
-            coordinator=entry.runtime_data.coordinator,
-            entity_description=entity_description,
-        )
-        for entity_description in ENTITY_DESCRIPTIONS
-    )
-
-
-class IntegrationBlueprintBinarySensor(IntegrationBlueprintEntity, BinarySensorEntity):
-    """integration_blueprint binary_sensor class."""
+class WaterValveEntity(
+    CoordinatorEntity[BlueprintDataUpdateCoordinator], BinarySensorEntity
+):
+    """Entity for a water valve device."""
 
     def __init__(
-        self,
-        coordinator: BlueprintDataUpdateCoordinator,
-        entity_description: BinarySensorEntityDescription,
+        self, coordinator: BlueprintDataUpdateCoordinator, panel: Panel
     ) -> None:
-        """Initialize the binary_sensor class."""
+        """Initialize the water valve entity."""
         super().__init__(coordinator)
-        self.entity_description = entity_description
+        self.panel: Panel = panel
+        self._attr_name: str = f"{panel.textIdentifier} Water Valve"
+        self._attr_unique_id: str = f"leak_defense_{panel.id}"
 
     @property
     def is_on(self) -> bool:
-        """Return true if the binary_sensor is on."""
-        return self.coordinator.data.get("title", "") == "foo"
+        """Return the state of the water valve (water is on)."""
+        return self.panel.waterOn
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional attributes for the water valve."""
+        return {
+            "offline": self.panel.offline,
+            "too_cold": self.panel.tooCold,
+            "scene": self.panel.scene,
+            "flow_value": self.panel.flowValue,
+            "trip_value": self.panel.tripValue,
+            "in_alarm": self.panel.inAlarm,
+        }
+
+
+class PanelTooColdEntity(
+    CoordinatorEntity[BlueprintDataUpdateCoordinator], BinarySensorEntity
+):
+    """Binary sensor for panel too cold status."""
+
+    def __init__(self, coordinator: BlueprintDataUpdateCoordinator, panel: Panel):
+        """Initialize the too cold binary sensor."""
+        super().__init__(coordinator)
+        self.panel = panel
+        self._attr_name = f"{panel.textIdentifier} Too Cold"
+        self._attr_unique_id = f"leak_defense_{panel.id}_too_cold"
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the panel is too cold."""
+        return self.panel.tooCold
+
+
+class PanelOfflineEntity(
+    CoordinatorEntity[BlueprintDataUpdateCoordinator], BinarySensorEntity
+):
+    """Binary sensor for panel offline status."""
+
+    def __init__(self, coordinator: BlueprintDataUpdateCoordinator, panel: Panel):
+        """Initialize the offline binary sensor."""
+        super().__init__(coordinator)
+        self.panel = panel
+        self._attr_name = f"{panel.textIdentifier} Offline"
+        self._attr_unique_id = f"leak_defense_{panel.id}_offline"
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the panel is offline."""
+        return self.panel.offline
+
+
+class PanelInAlarmEntity(
+    CoordinatorEntity[BlueprintDataUpdateCoordinator], BinarySensorEntity
+):
+    """Binary sensor for panel in alarm status."""
+
+    def __init__(self, coordinator: BlueprintDataUpdateCoordinator, panel: Panel):
+        """Initialize the in alarm binary sensor."""
+        super().__init__(coordinator)
+        self.panel = panel
+        self._attr_name = f"{panel.textIdentifier} In Alarm"
+        self._attr_unique_id = f"leak_defense_{panel.id}_in_alarm"
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the panel is in alarm."""
+        return self.panel.inAlarm
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LeakDefenseConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the water valve entities."""
+    coordinator: BlueprintDataUpdateCoordinator = entry.runtime_data.coordinator
+
+    # Ensure initial data fetch
+    await coordinator.async_config_entry_first_refresh()
+
+    # Create entities for each panel
+    panels: list[Panel] = coordinator.data["panels"]
+    entities: list[BinarySensorEntity] = []
+
+    for panel in panels:
+        entities.append(WaterValveEntity(coordinator, panel))
+        entities.append(PanelTooColdEntity(coordinator, panel))
+        entities.append(PanelOfflineEntity(coordinator, panel))
+        entities.append(PanelInAlarmEntity(coordinator, panel))
+
+    async_add_entities(entities)

@@ -9,10 +9,10 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import (
-    IntegrationBlueprintApiClient,
-    IntegrationBlueprintApiClientAuthenticationError,
-    IntegrationBlueprintApiClientCommunicationError,
-    IntegrationBlueprintApiClientError,
+    LeakDefenseApiClient,
+    LeakDefenseApiClientAuthenticationError,
+    LeakDefenseApiClientCommunicationError,
+    LeakDefenseApiClientError,
 )
 from .const import DOMAIN, LOGGER
 
@@ -28,25 +28,33 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by the user."""
         _errors = {}
+        data = {}
         if user_input is not None:
             try:
-                await self._test_credentials(
+                client = LeakDefenseApiClient(
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
+                    session=async_create_clientsession(self.hass),
                 )
-            except IntegrationBlueprintApiClientAuthenticationError as exception:
+
+                registration = await client.async_register_application()
+                data = {
+                    "token": registration.token,
+                    "deviceHash": registration.deviceHash,
+                }
+            except LeakDefenseApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
-            except IntegrationBlueprintApiClientCommunicationError as exception:
+            except LeakDefenseApiClientCommunicationError as exception:
                 LOGGER.error(exception)
                 _errors["base"] = "connection"
-            except IntegrationBlueprintApiClientError as exception:
+            except LeakDefenseApiClientError as exception:
                 LOGGER.exception(exception)
                 _errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
-                    data=user_input,
+                    data=data,
                 )
 
         return self.async_show_form(
@@ -70,12 +78,3 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=_errors,
         )
-
-    async def _test_credentials(self, username: str, password: str) -> None:
-        """Validate credentials."""
-        client = IntegrationBlueprintApiClient(
-            username=username,
-            password=password,
-            session=async_create_clientsession(self.hass),
-        )
-        await client.async_get_data()

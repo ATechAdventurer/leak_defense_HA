@@ -1,12 +1,12 @@
 {
-  "domain": "integration_blueprint",
-  "name": "Integration blueprint",
+  "domain": "leak_defense",
+  "name": "Leak Defense",
   "codeowners": [
-    "@ludeeus"
+    "@ATechAdventurer"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/ludeeus/integration_blueprint",
+  "documentation": "https://github.com/ludeeus/leak_defense",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/ludeeus/integration_blueprint/issues",
+  "issue_tracker": "https://github.com/ludeeus/leak_defense/issues",
   "version": "0.0.0"
 }
