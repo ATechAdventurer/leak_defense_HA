@@ -5,9 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import BlueprintDataUpdateCoordinator
 from .entity import LeakDefenseEntity
 
 if TYPE_CHECKING:
@@ -16,6 +14,7 @@ if TYPE_CHECKING:
 
     from custom_components.leak_defense.models import Panel
 
+    from .coordinator import BlueprintDataUpdateCoordinator
     from .data import LeakDefenseConfigEntry
 
 ENTITY_DESCRIPTIONS = (
@@ -54,7 +53,7 @@ class PanelSceneSensor(LeakDefenseEntity, SensorEntity):
 
     def __init__(
         self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
-    ):
+    ) -> None:
         """Initialize the scene sensor."""
         super().__init__(coordinator, inital_panel)
         self.panel = inital_panel
@@ -64,7 +63,6 @@ class PanelSceneSensor(LeakDefenseEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the scene value."""
-
         updated_panel = self.coordinator.data["panels"].get(self.panel.id)
 
         return updated_panel.scene if updated_panel else "Unknown"
@@ -75,7 +73,7 @@ class PanelFlowValueSensor(LeakDefenseEntity, SensorEntity):
 
     def __init__(
         self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
-    ):
+    ) -> None:
         """Initialize the flow value sensor."""
         super().__init__(coordinator, panel=inital_panel)
         self.panel = inital_panel
@@ -95,7 +93,7 @@ class PanelTripValueSensor(LeakDefenseEntity, SensorEntity):
 
     def __init__(
         self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
-    ):
+    ) -> None:
         """Initialize the trip value sensor."""
         super().__init__(coordinator, panel=inital_panel)
         self.panel = inital_panel

@@ -44,7 +44,6 @@ class WaterValveEntity(LeakDefenseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the water valve (water is on)."""
-
         updated_panel = self.coordinator.data["panels"].get(self.panel.id)
         # Return the trip value or a default value if the panel is not found
         return updated_panel.water_on if updated_panel else False
@@ -67,7 +66,7 @@ class PanelTooColdEntity(LeakDefenseEntity, BinarySensorEntity):
 
     def __init__(
         self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
-    ):
+    ) -> None:
         """Initialize the too cold binary sensor."""
         super().__init__(coordinator, panel=inital_panel)
         self.panel = inital_panel
@@ -87,7 +86,7 @@ class PanelOfflineEntity(LeakDefenseEntity, BinarySensorEntity):
 
     def __init__(
         self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
-    ):
+    ) -> None:
         """Initialize the offline binary sensor."""
         super().__init__(coordinator, panel=inital_panel)
         self.panel = inital_panel
@@ -107,7 +106,7 @@ class PanelInAlarmEntity(LeakDefenseEntity, BinarySensorEntity):
 
     def __init__(
         self, coordinator: BlueprintDataUpdateCoordinator, inital_panel: Panel
-    ):
+    ) -> None:
         """Initialize the in alarm binary sensor."""
         super().__init__(coordinator, panel=inital_panel)
         self.panel = inital_panel
@@ -123,7 +122,7 @@ class PanelInAlarmEntity(LeakDefenseEntity, BinarySensorEntity):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     entry: LeakDefenseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:

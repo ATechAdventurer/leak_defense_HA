@@ -78,7 +78,7 @@ class LeakDefenseApiClient:
         self._device_id = str(uuid.uuid4())
 
     async def async_register_application(self) -> TokenResponse:
-        """Register device and generate token and device ID using username and password."""
+        """Register device with the API."""
         if not self._username or not self._password:
             msg = "Username and password must be provided to register application."
             raise LeakDefenseApiClientAuthenticationError(msg)

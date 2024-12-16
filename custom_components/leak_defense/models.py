@@ -1,9 +1,13 @@
+"""Models for the Leak Defense API."""
+
 from enum import Enum
 
 from pydantic import BaseModel, Field
 
 
 class TokenResponse(BaseModel):
+    """TokenResponse model."""
+
     token: str
     device_hash: str = Field(alias="deviceHash")
     uid: str | None
@@ -13,6 +17,8 @@ class TokenResponse(BaseModel):
 
 
 class Panel(BaseModel):
+    """Panel model."""
+
     clear_alarm_message: str = Field(alias="clearAlarmMessage")
     pold_alarm_name: str | None = Field(alias="poldAlarmName")
     pold_alarm_message: str | None = Field(alias="poldAlarmMesage")
@@ -107,11 +113,15 @@ class Panel(BaseModel):
 
 
 class NewFeature(BaseModel):
+    """NewFeature model."""
+
     name: str
     show: bool
 
 
 class Customer(BaseModel):
+    """Customer model."""
+
     id: str
     first_name: str = Field(alias="firstName")
     middle_name: str | None = Field(alias="middleName")
@@ -133,31 +143,35 @@ class Customer(BaseModel):
 
 
 class ApiResponse(BaseModel):
+    """ApiResponse model."""
+
     customer: Customer
     ios_version: str = Field(alias="iOSVersion")
     android_version: str = Field(alias="androidVersion")
     in_maint: str = Field(alias="inMaint")
 
 
-from pydantic import BaseModel
-from typing import Optional
-
-
 class LegacyRequest(BaseModel):
+    """LegacyRequest model."""
+
     id: int
     mode: str
-    tripTime: str
-    tripVal: str
-    waterOff: bool
-    clearAlarm: bool
+    trip_time: str = Field(alias="tripTime")
+    trip_val: str = Field(alias="tripVal")
+    water_off: bool = Field(alias="waterOff")
+    clear_alarm: bool = Field(alias="clearAlarm")
 
 
 class HexRequest(BaseModel):
-    Scene: Optional[str] = None
-    value: Optional[str] = None
+    """HexRequest model."""
+
+    Scene: str | None = None
+    value: str | None = None
 
 
 class CommandSetScene(BaseModel):
+    """CommandSetScene model."""
+
     ApiSource: int
     ReturnPanelVM: bool
     LegacyRequest: LegacyRequest
@@ -165,6 +179,8 @@ class CommandSetScene(BaseModel):
 
 
 class SceneEnum(str, Enum):
+    """Enum class for the scene attribute of the Panel model."""
+
     HOME = "HOME"
     AWAY = "AWAY"
     STANDBY = "STANDBY"

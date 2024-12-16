@@ -1,30 +1,25 @@
-"""
-Leak Defense Integration
-"""
+"""Leak Defense Integration."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
 from custom_components.leak_defense.models import SceneEnum
 
 from .api import LeakDefenseApiClient
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import BlueprintDataUpdateCoordinator
 from .data import LeakDefenseData
 
 if TYPE_CHECKING:
-    from homeassistant.core import ServiceCall
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import HomeAssistant, ServiceCall
 
     from .data import LeakDefenseConfigEntry
 
@@ -65,7 +60,8 @@ async def async_setup_entry(
         device = device_registry.async_get(device_id)
 
         if not device:
-            raise ValueError(f"Device {device_id} not found")
+            msg = f"Device {device_id} not found"
+            raise ValueError(msg)
 
         # Get the panel_id from the device identifier
         panel_id = next(
@@ -74,7 +70,8 @@ async def async_setup_entry(
         )
 
         if not panel_id:
-            raise ValueError(f"No panel ID found for device {device_id}")
+            msg = f"No panel ID found for device {device_id}"
+            raise ValueError(msg)
 
         # Send the scene command
         await entry.runtime_data.client.async_send_scene(

@@ -32,5 +32,4 @@ class LeakDefenseEntity(CoordinatorEntity[BlueprintDataUpdateCoordinator]):
             manufacturer="Leak Defense",
             model="Water Panel",
             sw_version="1.0",
-            
         )

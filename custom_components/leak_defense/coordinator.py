@@ -17,12 +17,13 @@ from .const import DOMAIN, LOGGER
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-    from custom_components.leak_defense.models import Panel
-
     from .data import LeakDefenseConfigEntry
+    from .models import Panel
 
 
 class CoordinatorData(TypedDict):
+    """Coordinator data."""
+
     panels: dict[int, Panel]
 
 
