@@ -156,7 +156,14 @@ class LeakDefenseApiClient:
             ),
             HexRequest=HexRequest(Scene=None, value=None),
         )
-        _LOGGER.log(msg=scene_payload.model_dump_json(), level=logging.INFO)
+        # Handle both Pydantic v1 and v2 model methods
+        try:
+            payload_dict = scene_payload.model_dump()
+        except AttributeError:
+            # Fallback for Pydantic v1
+            payload_dict = scene_payload.dict()
+
+        _LOGGER.debug("Scene payload: %s", payload_dict)
         await self._api_wrapper(
             method="post",
             endpoint="/Command/SetScene",
